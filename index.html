@@ -1138,7 +1138,7 @@
           <div class="hero-stat-value pos" id="statIncome">R$ 0</div>
         </div>
         <div class="hero-stat">
-          <div class="hero-stat-label">Despesas Atual</div>
+          <div class="hero-stat-label">Saídas Atual</div>
           <div class="hero-stat-value neg" id="statExpenses">R$ 0</div>
         </div>
         <div class="hero-stat">
@@ -1585,24 +1585,21 @@ function renderHero() {
   document.getElementById('calendarMonthLabel').textContent = `${MONTHS_PT[state.activeMonth]} 2026`;
 
   const incomeAct = sumActual(m.income) + sumWiseBRL(m.wise);
-  const incomeEst = sumEst(m.income);
-  const expensesAct = sumActual(m.fixas) + sumActual(m.dividas) + sumActual(m.extras);
-  const expensesEst = sumEst(m.fixas) + sumEst(m.dividas) + sumEst(m.extras);
-  const poupancaAct = sumActual(m.poupanca);
+  const outflowsAct = sumActual(m.fixas) + sumActual(m.dividas) + sumActual(m.extras) + sumActual(m.poupanca);
 
-  // Available = actual income - estimated expenses (to plan)
-  const disponivel = incomeAct - expensesEst - sumEst(m.poupanca);
+  // Disponível = entra - sai (igual sua planilha original)
+  const disponivel = incomeAct - outflowsAct;
 
   const dEl = document.getElementById('disponivel');
   dEl.innerHTML = `<span class="currency">R$</span>${num.format(Math.abs(Math.round(disponivel)))}`;
   dEl.classList.toggle('negative', disponivel < 0);
 
   document.getElementById('disponivelSub').textContent = disponivel < 0
-    ? 'déficit previsto — ajuste despesas ou aumente receita'
-    : 'receita atual menos despesas previstas';
+    ? 'saídas atuais maiores que a receita — ajuste valores ou meta'
+    : 'receita atual menos tudo que sai (despesas + poupança)';
 
   document.getElementById('statIncome').textContent = fmtBRL(incomeAct);
-  document.getElementById('statExpenses').textContent = fmtBRL(expensesAct);
+  document.getElementById('statExpenses').textContent = fmtBRL(outflowsAct);
 
   const allBills = [...m.fixas, ...m.dividas, ...m.extras, ...m.poupanca];
   const paid = allBills.filter(b => b.status === 'pago').length;
