@@ -576,6 +576,8 @@
     color: var(--ink-muted);
     display: flex;
     gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
   }
 
   .section-total strong {
@@ -1434,6 +1436,7 @@
         <h2 class="section-title">Assinaturas <span class="count" id="subsCount"></span></h2>
       </div>
       <div class="section-total">
+        <button class="btn btn-sm" id="copySubsBtn" title="Copiar assinaturas do mês anterior">↗ Copiar do mês anterior</button>
         <span>Ativas <strong id="subsActiveTotal">R$ 0</strong></span>
         <span>Anual <strong id="subsAnnualTotal">R$ 0</strong></span>
       </div>
@@ -2482,6 +2485,87 @@ document.getElementById('resetBtn').onclick = () => {
 };
 
 document.getElementById('addGoalBtn').onclick = addGoal;
+
+// Copy subscriptions from previous month
+document.getElementById('copySubsBtn').onclick = () => {
+  const prevIdx = state.activeMonth - 1;
+  if (prevIdx < 0) {
+    toast('Não há mês anterior em 2026');
+    return;
+  }
+  const prev = state.months[prevIdx];
+  const prevSubs = (prev && prev.subs) || [];
+
+  if (prevSubs.length === 0) {
+    toast(`${MONTHS_PT[prevIdx]} não tem assinaturas cadastradas`);
+    return;
+  }
+
+  const m = activeMonthData();
+  const currentCount = (m.subs || []).length;
+  const eligibleFromPrev = prevSubs.filter(s => s.status !== 'cancelada');
+  const cancelledCount = prevSubs.length - eligibleFromPrev.length;
+
+  const summary = currentCount > 0
+    ? `<p>${MONTHS_PT[prevIdx]} tem <strong>${prevSubs.length}</strong> assinatura(s)${cancelledCount > 0 ? ` (${cancelledCount} cancelada(s) serão ignoradas)` : ''}. Você já tem <strong>${currentCount}</strong> em ${MONTHS_PT[state.activeMonth]}.</p>
+       <p>O que você quer fazer?</p>`
+    : `<p>Copiar <strong>${eligibleFromPrev.length}</strong> assinatura(s) ativa(s) e em teste de ${MONTHS_PT[prevIdx]} para ${MONTHS_PT[state.activeMonth]}?</p>${cancelledCount > 0 ? `<p style="color:var(--ink-muted);font-size:12px;">${cancelledCount} cancelada(s) serão ignoradas.</p>` : ''}`;
+
+  const actions = [
+    { label: 'Cancelar', class: 'btn', onClick: closeModal }
+  ];
+
+  if (currentCount > 0) {
+    actions.push({
+      label: 'Mesclar (mantém atuais)',
+      class: 'btn',
+      onClick: () => {
+        // Merge: add only those from prev that don't already exist by name
+        const existingNames = new Set((m.subs || []).map(s => (s.name || '').toLowerCase().trim()));
+        let added = 0;
+        eligibleFromPrev.forEach(s => {
+          const key = (s.name || '').toLowerCase().trim();
+          if (!existingNames.has(key)) {
+            m.subs.push({ ...s, id: newId() });
+            added++;
+          }
+        });
+        saveState();
+        renderSubs();
+        renderCalendar();
+        closeModal();
+        toast(added > 0 ? `${added} assinatura(s) adicionada(s)` : 'Nenhuma novidade — todas já existiam');
+      }
+    });
+    actions.push({
+      label: 'Substituir tudo',
+      class: 'btn btn-primary',
+      onClick: () => {
+        m.subs = eligibleFromPrev.map(s => ({ ...s, id: newId() }));
+        saveState();
+        renderSubs();
+        renderCalendar();
+        closeModal();
+        toast(`${m.subs.length} assinatura(s) copiada(s)`);
+      }
+    });
+  } else {
+    actions.push({
+      label: 'Copiar',
+      class: 'btn btn-primary',
+      onClick: () => {
+        m.subs = eligibleFromPrev.map(s => ({ ...s, id: newId() }));
+        saveState();
+        renderSubs();
+        renderCalendar();
+        closeModal();
+        toast(`${m.subs.length} assinatura(s) copiada(s)`);
+      }
+    });
+  }
+
+  openModal(`Copiar assinaturas de ${MONTHS_PT[prevIdx]}`, summary, actions);
+};
 
 // ========================================================================
 // SECTION DRAG AND DROP
