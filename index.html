@@ -395,6 +395,12 @@
     width: 6px; height: 6px;
     transform: rotate(45deg);
   }
+  .cal-dot.square {
+    background: var(--brass-soft);
+    border: 1px solid var(--brass);
+    border-radius: 1px;
+    width: 6px; height: 6px;
+  }
 
   .calendar-grid {
     display: grid;
@@ -458,6 +464,20 @@
     border-radius: var(--radius-lg);
     padding: 28px;
     margin-bottom: 24px;
+    transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .section.dragging {
+    opacity: 0.4;
+    cursor: grabbing;
+  }
+
+  .section.drag-over-top {
+    box-shadow: 0 -3px 0 var(--brass);
+  }
+
+  .section.drag-over-bottom {
+    box-shadow: 0 3px 0 var(--brass);
   }
 
   .section-head {
@@ -470,6 +490,67 @@
     gap: 12px;
     flex-wrap: wrap;
   }
+
+  .drag-handle {
+    cursor: grab;
+    color: var(--ink-faint);
+    padding: 0 8px 0 0;
+    margin-right: 4px;
+    font-size: 14px;
+    line-height: 1;
+    user-select: none;
+    transition: color 0.15s ease;
+    align-self: center;
+    letter-spacing: -2px;
+  }
+
+  .drag-handle:hover { color: var(--brass); }
+  .drag-handle:active { cursor: grabbing; }
+
+  .section-title-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+
+  /* ==================== SUBSCRIPTION-SPECIFIC ==================== */
+  .sub-cat-chip {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    background: var(--bg-elev);
+    color: var(--ink-muted);
+    border: 1px solid var(--line-soft);
+    cursor: text;
+    min-width: 50px;
+    text-align: center;
+  }
+
+  .status-ativa {
+    background: var(--sage-soft);
+    color: #4A5D42;
+    border-color: rgba(122, 143, 108, 0.3);
+  }
+  .status-ativa::before { background: var(--sage); }
+
+  .status-teste {
+    background: #F5E6C4;
+    color: #7A5F1F;
+    border-color: rgba(196, 146, 60, 0.3);
+  }
+  .status-teste::before { background: var(--warn); }
+
+  .status-cancelada {
+    background: var(--line-soft);
+    color: var(--ink-muted);
+    border-color: var(--line);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+  }
+  .status-cancelada::before { background: var(--ink-faint); }
 
   .section-title {
     font-family: 'Fraunces', serif;
@@ -1153,6 +1234,7 @@
         <div class="calendar-month" id="calendarMonthLabel">Abril 2026</div>
         <div class="calendar-dot-legend">
           <span class="dot-legend-item"><span class="cal-dot diamond"></span>recebido</span>
+          <span class="dot-legend-item"><span class="cal-dot square"></span>assinatura</span>
           <span class="dot-legend-item"><span class="cal-dot" style="background:var(--terra)"></span>vence</span>
           <span class="dot-legend-item"><span class="cal-dot" style="background:var(--sage)"></span>quitado</span>
           <span class="dot-legend-item"><span class="cal-dot ring"></span>pago em</span>
@@ -1162,10 +1244,16 @@
     </div>
   </div>
 
+  <!-- Reorderable sections -->
+  <div id="sectionsContainer">
+
   <!-- Income / Salary -->
-  <section class="section">
+  <section class="section" data-section-id="income" draggable="true">
     <div class="section-head">
-      <h2 class="section-title">Receita <span class="count" id="incomeCount"></span></h2>
+      <div class="section-title-wrap">
+        <span class="drag-handle" title="Arraste para reordenar">⋮⋮</span>
+        <h2 class="section-title">Receita <span class="count" id="incomeCount"></span></h2>
+      </div>
       <div class="section-total">
         <span>Estimado <strong id="incomeEst">R$ 0</strong></span>
         <span>Atual <strong id="incomeAct">R$ 0</strong></span>
@@ -1210,9 +1298,12 @@
   </section>
 
   <!-- Credit Cards -->
-  <section class="section">
+  <section class="section" data-section-id="cards" draggable="true">
     <div class="section-head">
-      <h2 class="section-title">Cartões de Crédito <span class="count" id="cardsCount"></span></h2>
+      <div class="section-title-wrap">
+        <span class="drag-handle" title="Arraste para reordenar">⋮⋮</span>
+        <h2 class="section-title">Cartões de Crédito <span class="count" id="cardsCount"></span></h2>
+      </div>
       <div class="section-total">
         <span>Limite Total <strong id="cardsLimitTotal">R$ 0</strong></span>
         <span>Disponível <strong id="cardsAvailTotal">R$ 0</strong></span>
@@ -1223,9 +1314,12 @@
   </section>
 
   <!-- Bill Categories -->
-  <section class="section">
+  <section class="section" data-section-id="fixas" draggable="true">
     <div class="section-head">
-      <h2 class="section-title">Contas Fixas <span class="count" id="fixasCount"></span></h2>
+      <div class="section-title-wrap">
+        <span class="drag-handle" title="Arraste para reordenar">⋮⋮</span>
+        <h2 class="section-title">Contas Fixas <span class="count" id="fixasCount"></span></h2>
+      </div>
       <div class="section-total">
         <span>Estimado <strong id="fixasEst">R$ 0</strong></span>
         <span>Atual <strong id="fixasAct">R$ 0</strong></span>
@@ -1248,9 +1342,12 @@
     <button class="add-row-btn" data-action="add-fixas">+ Nova conta fixa</button>
   </section>
 
-  <section class="section">
+  <section class="section" data-section-id="dividas" draggable="true">
     <div class="section-head">
-      <h2 class="section-title">Dívidas <span class="count" id="dividasCount"></span></h2>
+      <div class="section-title-wrap">
+        <span class="drag-handle" title="Arraste para reordenar">⋮⋮</span>
+        <h2 class="section-title">Dívidas <span class="count" id="dividasCount"></span></h2>
+      </div>
       <div class="section-total">
         <span>Estimado <strong id="dividasEst">R$ 0</strong></span>
         <span>Atual <strong id="dividasAct">R$ 0</strong></span>
@@ -1273,9 +1370,12 @@
     <button class="add-row-btn" data-action="add-dividas">+ Nova dívida</button>
   </section>
 
-  <section class="section">
+  <section class="section" data-section-id="extras" draggable="true">
     <div class="section-head">
-      <h2 class="section-title">Extras <span class="count" id="extrasCount"></span></h2>
+      <div class="section-title-wrap">
+        <span class="drag-handle" title="Arraste para reordenar">⋮⋮</span>
+        <h2 class="section-title">Extras <span class="count" id="extrasCount"></span></h2>
+      </div>
       <div class="section-total">
         <span>Estimado <strong id="extrasEst">R$ 0</strong></span>
         <span>Atual <strong id="extrasAct">R$ 0</strong></span>
@@ -1298,9 +1398,12 @@
     <button class="add-row-btn" data-action="add-extras">+ Novo extra</button>
   </section>
 
-  <section class="section">
+  <section class="section" data-section-id="poupanca" draggable="true">
     <div class="section-head">
-      <h2 class="section-title">Poupança <span class="count" id="poupancaCount"></span></h2>
+      <div class="section-title-wrap">
+        <span class="drag-handle" title="Arraste para reordenar">⋮⋮</span>
+        <h2 class="section-title">Poupança <span class="count" id="poupancaCount"></span></h2>
+      </div>
       <div class="section-total">
         <span>Meta <strong id="poupancaEst">R$ 0</strong></span>
         <span>Guardado <strong id="poupancaAct">R$ 0</strong></span>
@@ -1322,6 +1425,36 @@
     </table>
     <button class="add-row-btn" data-action="add-poupanca">+ Nova caixinha</button>
   </section>
+
+  <!-- Subscriptions -->
+  <section class="section" data-section-id="subs" draggable="true">
+    <div class="section-head">
+      <div class="section-title-wrap">
+        <span class="drag-handle" title="Arraste para reordenar">⋮⋮</span>
+        <h2 class="section-title">Assinaturas <span class="count" id="subsCount"></span></h2>
+      </div>
+      <div class="section-total">
+        <span>Ativas <strong id="subsActiveTotal">R$ 0</strong></span>
+        <span>Anual <strong id="subsAnnualTotal">R$ 0</strong></span>
+      </div>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Serviço</th>
+          <th class="center" style="width: 110px">Categoria</th>
+          <th class="center" style="width: 52px">Cobra</th>
+          <th class="num" style="width: 110px">Valor / mês</th>
+          <th class="center" style="width: 110px">Status</th>
+          <th style="width: 40px"></th>
+        </tr>
+      </thead>
+      <tbody id="subsBody"></tbody>
+    </table>
+    <button class="add-row-btn" data-action="add-subs">+ Nova assinatura</button>
+  </section>
+
+  </div><!-- /sectionsContainer -->
 
   <!-- Annual Goals -->
   <section class="goals-section">
@@ -1364,9 +1497,12 @@ function emptyMonth() {
     fixas: [],
     dividas: [],
     extras: [],
-    poupanca: []
+    poupanca: [],
+    subs: []
   };
 }
+
+const DEFAULT_SECTION_ORDER = ['income', 'cards', 'fixas', 'dividas', 'extras', 'poupanca', 'subs'];
 
 function newId() { return 'id_' + Math.random().toString(36).slice(2, 10); }
 
@@ -1374,6 +1510,7 @@ function defaultState() {
   const state = {
     activeMonth: 3, // April (0-indexed)
     months: {},
+    sectionOrder: [...DEFAULT_SECTION_ORDER],
     goals: [
       { id: newId(), label: 'Emergência (6 meses)', target: 48000, saved: 2000 },
       { id: newId(), label: 'Entrada Apartamento', target: 120000, saved: 22000 },
@@ -1425,6 +1562,13 @@ function defaultState() {
       { id: newId(), name: 'Caixinha Apartamento', estimated: 10000, actual: 10000, status: 'guardado', day: 25, paidDay: 22 },
       { id: newId(), name: 'Presente Yuri', estimated: 0, actual: 4000, status: 'guardado', day: 25, paidDay: 15 },
       { id: newId(), name: 'Compras Casa', estimated: 4000, actual: 0, status: 'apagar', day: 28, paidDay: null }
+    ],
+    subs: [
+      { id: newId(), name: 'Spotify Família', category: 'Música', value: 27.90, day: 8, status: 'ativa' },
+      { id: newId(), name: 'Netflix Premium', category: 'Streaming', value: 55.90, day: 15, status: 'ativa' },
+      { id: newId(), name: 'iCloud 200GB', category: 'Cloud', value: 11.90, day: 3, status: 'ativa' },
+      { id: newId(), name: 'ChatGPT Plus', category: 'IA', value: 99.00, day: 12, status: 'ativa' },
+      { id: newId(), name: 'Notion', category: 'Produtividade', value: 0, day: null, status: 'ativa' }
     ]
   };
 
@@ -1493,11 +1637,19 @@ function loadState() {
       state = JSON.parse(saved);
       // Migration / backfill
       if (!state.goals) state.goals = defaultState().goals;
+      if (!state.sectionOrder || !Array.isArray(state.sectionOrder)) {
+        state.sectionOrder = [...DEFAULT_SECTION_ORDER];
+      }
+      // Backfill missing sections in existing order (for older saves)
+      DEFAULT_SECTION_ORDER.forEach(id => {
+        if (!state.sectionOrder.includes(id)) state.sectionOrder.push(id);
+      });
       for (let i = 0; i < 12; i++) {
         if (!state.months[i]) state.months[i] = emptyMonth();
         const m = state.months[i];
         if (!m.wise) m.wise = [];
         if (!m.cards) m.cards = [];
+        if (!m.subs) m.subs = [];
         for (const k of ['income','fixas','dividas','extras','poupanca']) {
           if (!m[k]) m[k] = [];
         }
@@ -1576,7 +1728,7 @@ function renderMonthTabs() {
 }
 
 function hasData(m) {
-  return (m.income?.length + m.wise?.length + m.cards?.length + m.fixas?.length + m.dividas?.length + m.extras?.length + m.poupanca?.length) > 0;
+  return (m.income?.length + m.wise?.length + m.cards?.length + m.fixas?.length + m.dividas?.length + m.extras?.length + m.poupanca?.length + (m.subs?.length || 0)) > 0;
 }
 
 function renderHero() {
@@ -1674,6 +1826,14 @@ function renderCalendar() {
     if (!dayMap[d]) dayMap[d] = [];
     dayMap[d].push({ name: r.desc, _cat: 'wise', kind: 'received' });
   });
+  // Subscriptions (active only) — billing day
+  (m.subs || []).forEach(s => {
+    if (s.status !== 'ativa') return;
+    const d = Number(s.day);
+    if (!d || d < 1 || d > 31) return;
+    if (!dayMap[d]) dayMap[d] = [];
+    dayMap[d].push({ name: s.name, _cat: 'subs', kind: 'sub' });
+  });
 
   // Empty cells before day 1
   for (let i = 0; i < firstDay; i++) {
@@ -1698,12 +1858,20 @@ function renderCalendar() {
       const dueItems = dayMap[d].filter(x => x.kind === 'due');
       const paidItems = dayMap[d].filter(x => x.kind === 'paid');
       const receivedItems = dayMap[d].filter(x => x.kind === 'received');
+      const subItems = dayMap[d].filter(x => x.kind === 'sub');
 
       // Received marker (brass diamond) — shown first
       if (receivedItems.length > 0) {
         const diamond = document.createElement('span');
         diamond.className = 'cal-dot diamond';
         dotsEl.appendChild(diamond);
+      }
+
+      // Subscription marker (small square)
+      if (subItems.length > 0) {
+        const sq = document.createElement('span');
+        sq.className = 'cal-dot square';
+        dotsEl.appendChild(sq);
       }
 
       // Due dots — one per unique status (max 3)
@@ -1727,6 +1895,7 @@ function renderCalendar() {
       // Tooltip
       const parts = [];
       receivedItems.forEach(b => parts.push(`recebido: ${b.name}`));
+      subItems.forEach(b => parts.push(`assinatura: ${b.name}`));
       dueItems.forEach(b => parts.push(`vence: ${b.name}${b.status === 'pago' ? ' ✓' : ''}`));
       paidItems.forEach(b => parts.push(`pago: ${b.name}`));
       el.title = parts.join('\n');
@@ -1887,6 +2056,44 @@ function renderBillCategory(cat) {
 function statusChip(status, id, cat) {
   const labels = { pago: 'PAGO', guardado: 'GUARDADO', apagar: 'A PAGAR' };
   return `<span class="status-chip status-${status}" data-action="cycle-status" data-id="${id}" data-cat="${cat}">${labels[status] || 'A PAGAR'}</span>`;
+}
+
+// ---------- SUBSCRIPTIONS ----------
+function renderSubs() {
+  const m = activeMonthData();
+  const body = document.getElementById('subsBody');
+  body.innerHTML = '';
+
+  (m.subs || []).forEach(row => {
+    const tr = document.createElement('tr');
+    tr.className = 'row-fade-in';
+    if (row.status === 'cancelada') tr.style.opacity = '0.55';
+    tr.innerHTML = `
+      <td class="name"><span class="editable" data-field="name" data-id="${row.id}">${escapeHtml(row.name)}</span></td>
+      <td class="center"><span class="sub-cat-chip editable" data-field="category" data-id="${row.id}">${escapeHtml(row.category || '—')}</span></td>
+      <td class="day-cell"><input class="day-input" type="number" min="1" max="31" value="${row.day || ''}" data-field="day" data-id="${row.id}" placeholder="—"></td>
+      <td class="num"><span class="editable" data-field="value" data-id="${row.id}" data-type="number">${num.format(row.value || 0)}</span></td>
+      <td class="center">${subStatusChip(row.status || 'ativa', row.id)}</td>
+      <td class="row-actions"><button class="icon-btn" data-action="delete-subs" data-id="${row.id}" title="Remover">×</button></td>
+    `;
+    body.appendChild(tr);
+  });
+
+  document.getElementById('subsCount').textContent = `· ${(m.subs || []).length}`;
+  const activeMonthlyTotal = (m.subs || [])
+    .filter(s => s.status === 'ativa')
+    .reduce((sum, s) => sum + (Number(s.value) || 0), 0);
+  document.getElementById('subsActiveTotal').textContent = fmtBRL(activeMonthlyTotal, 2);
+  document.getElementById('subsAnnualTotal').textContent = fmtBRL(activeMonthlyTotal * 12);
+
+  bindEditables(body, 'subs');
+  bindDayInputs(body, 'subs');
+  bindRowActions(body);
+}
+
+function subStatusChip(status, id) {
+  const labels = { ativa: 'ATIVA', teste: 'TESTE', cancelada: 'CANCELADA' };
+  return `<span class="status-chip status-${status}" data-action="cycle-sub-status" data-id="${id}">${labels[status] || 'ATIVA'}</span>`;
 }
 
 // ---------- GOALS ----------
@@ -2068,6 +2275,15 @@ function bindRowActions(root) {
         }
         saveState();
         rerenderForCat(cat);
+      } else if (action === 'cycle-sub-status') {
+        const row = findRow('subs', id);
+        if (!row) return;
+        const cycle = ['ativa', 'teste', 'cancelada'];
+        const idx = cycle.indexOf(row.status || 'ativa');
+        row.status = cycle[(idx + 1) % cycle.length];
+        saveState();
+        renderSubs();
+        renderCalendar();
       } else if (action && action.startsWith('delete-')) {
         const cat = action.replace('delete-', '');
         deleteRow(cat, id);
@@ -2085,6 +2301,7 @@ function rerenderForCat(cat) {
   if (cat === 'income') { renderIncome(); renderHero(); }
   else if (cat === 'wise') { renderWise(); renderHero(); }
   else if (cat === 'cards') { renderCards(); renderCalendar(); }
+  else if (cat === 'subs') { renderSubs(); renderCalendar(); }
   else { renderBillCategory(cat); renderCalendar(); renderHero(); }
   renderMonthTabs();
 }
@@ -2115,6 +2332,9 @@ document.addEventListener('click', (e) => {
   } else if (action === 'add-card') {
     m.cards.push({ id: newId(), name: 'Novo cartão', limit: 0, used: 0, dueDay: 10 });
     saveState(); renderCards(); renderCalendar();
+  } else if (action === 'add-subs') {
+    m.subs.push({ id: newId(), name: 'Nova assinatura', category: '', value: 0, day: null, status: 'ativa' });
+    saveState(); renderSubs(); renderCalendar();
   } else if (['add-fixas','add-dividas','add-extras','add-poupanca'].includes(action)) {
     const cat = action.replace('add-', '');
     m[cat].push({ id: newId(), name: 'Nova linha', estimated: 0, actual: 0, status: 'apagar', day: null });
@@ -2235,6 +2455,8 @@ document.getElementById('copyPrevBtn').onclick = () => {
       copy.income = copy.income.map(r => ({ ...r, id: newId(), actual: 0, receivedDay: null }));
       copy.wise = copy.wise.map(r => ({ ...r, id: newId(), status: 'apagar', receivedDay: null }));
       copy.cards = copy.cards.map(r => ({ ...r, id: newId(), used: 0 }));
+      // Subscriptions carry over with same status — they're recurring by nature
+      copy.subs = (copy.subs || []).map(r => ({ ...r, id: newId() }));
       state.months[state.activeMonth] = copy;
       saveState();
       renderAll();
@@ -2262,9 +2484,193 @@ document.getElementById('resetBtn').onclick = () => {
 document.getElementById('addGoalBtn').onclick = addGoal;
 
 // ========================================================================
+// SECTION DRAG AND DROP
+// ========================================================================
+function applySectionOrder() {
+  const container = document.getElementById('sectionsContainer');
+  if (!container) return;
+  const sections = Array.from(container.querySelectorAll(':scope > section[data-section-id]'));
+  const byId = {};
+  sections.forEach(s => byId[s.dataset.sectionId] = s);
+
+  // Append in saved order; any unknown ids stay in their original position at end
+  state.sectionOrder.forEach(id => {
+    if (byId[id]) {
+      container.appendChild(byId[id]);
+      delete byId[id];
+    }
+  });
+  // Anything left (sections not in sectionOrder) just stays appended after
+  Object.values(byId).forEach(s => container.appendChild(s));
+}
+
+function getCurrentSectionOrder() {
+  const container = document.getElementById('sectionsContainer');
+  return Array.from(container.querySelectorAll(':scope > section[data-section-id]'))
+    .map(s => s.dataset.sectionId);
+}
+
+let dragSrcEl = null;
+
+function setupSectionDragAndDrop() {
+  const container = document.getElementById('sectionsContainer');
+  if (!container) return;
+
+  container.addEventListener('dragstart', (e) => {
+    const section = e.target.closest('section[data-section-id]');
+    if (!section) return;
+    // Only allow drag if started on the handle OR on section header (not on inputs)
+    const startTarget = e.target;
+    if (startTarget.closest('input, textarea, .editable, button, .day-input, .status-chip')) {
+      e.preventDefault();
+      return;
+    }
+    dragSrcEl = section;
+    section.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', section.dataset.sectionId);
+  });
+
+  container.addEventListener('dragend', (e) => {
+    const section = e.target.closest('section[data-section-id]');
+    if (section) section.classList.remove('dragging');
+    container.querySelectorAll('section.drag-over-top, section.drag-over-bottom')
+      .forEach(s => s.classList.remove('drag-over-top', 'drag-over-bottom'));
+    dragSrcEl = null;
+  });
+
+  container.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const section = e.target.closest('section[data-section-id]');
+    if (!section || section === dragSrcEl) return;
+    e.dataTransfer.dropEffect = 'move';
+
+    // Decide: drop above or below based on cursor
+    const rect = section.getBoundingClientRect();
+    const halfway = rect.top + rect.height / 2;
+    const isAbove = e.clientY < halfway;
+
+    // Clear other indicators
+    container.querySelectorAll('section.drag-over-top, section.drag-over-bottom')
+      .forEach(s => {
+        if (s !== section) s.classList.remove('drag-over-top', 'drag-over-bottom');
+      });
+
+    section.classList.toggle('drag-over-top', isAbove);
+    section.classList.toggle('drag-over-bottom', !isAbove);
+  });
+
+  container.addEventListener('dragleave', (e) => {
+    const section = e.target.closest('section[data-section-id]');
+    if (section && !section.contains(e.relatedTarget)) {
+      section.classList.remove('drag-over-top', 'drag-over-bottom');
+    }
+  });
+
+  container.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const target = e.target.closest('section[data-section-id]');
+    if (!target || !dragSrcEl || target === dragSrcEl) return;
+
+    const rect = target.getBoundingClientRect();
+    const isAbove = e.clientY < rect.top + rect.height / 2;
+
+    if (isAbove) {
+      target.parentNode.insertBefore(dragSrcEl, target);
+    } else {
+      target.parentNode.insertBefore(dragSrcEl, target.nextSibling);
+    }
+
+    // Save the new order
+    state.sectionOrder = getCurrentSectionOrder();
+    saveState();
+    toast('Ordem salva');
+
+    // Clean up indicators
+    container.querySelectorAll('section.drag-over-top, section.drag-over-bottom')
+      .forEach(s => s.classList.remove('drag-over-top', 'drag-over-bottom'));
+  });
+}
+
+// Touch fallback for mobile (long-press to grab) — provides a simple "move up/down" affordance
+function setupTouchReorderFallback() {
+  // Long-press on drag-handle opens a small menu to move section up/down
+  document.addEventListener('contextmenu', (e) => {
+    const handle = e.target.closest('.drag-handle');
+    if (!handle) return;
+    e.preventDefault();
+    moveSectionPrompt(handle.closest('section[data-section-id]'));
+  });
+  // Also: tap on handle on mobile shows the move menu
+  document.addEventListener('click', (e) => {
+    const handle = e.target.closest('.drag-handle');
+    if (!handle) return;
+    // Only on touch devices to avoid annoying desktop users
+    if (window.matchMedia('(hover: none)').matches) {
+      moveSectionPrompt(handle.closest('section[data-section-id]'));
+    }
+  });
+}
+
+function moveSectionPrompt(section) {
+  if (!section) return;
+  const id = section.dataset.sectionId;
+  const order = getCurrentSectionOrder();
+  const idx = order.indexOf(id);
+  const titleEl = section.querySelector('.section-title');
+  const title = titleEl ? titleEl.firstChild.textContent.trim() : id;
+
+  const actions = [];
+  if (idx > 0) {
+    actions.push({ label: '↑ Mover para cima', class: 'btn', onClick: () => {
+      moveSection(id, -1); closeModal();
+    }});
+  }
+  if (idx < order.length - 1) {
+    actions.push({ label: '↓ Mover para baixo', class: 'btn', onClick: () => {
+      moveSection(id, 1); closeModal();
+    }});
+  }
+  actions.push({ label: 'Topo', class: 'btn', onClick: () => {
+    moveSectionToEnd(id, 'top'); closeModal();
+  }});
+  actions.push({ label: 'Fim', class: 'btn', onClick: () => {
+    moveSectionToEnd(id, 'bottom'); closeModal();
+  }});
+  actions.push({ label: 'Fechar', class: 'btn btn-primary', onClick: closeModal });
+
+  openModal(`Mover "${title}"`, `<p>Escolha onde mover a seção:</p>`, actions);
+}
+
+function moveSection(id, delta) {
+  const order = [...state.sectionOrder];
+  const idx = order.indexOf(id);
+  if (idx < 0) return;
+  const newIdx = idx + delta;
+  if (newIdx < 0 || newIdx >= order.length) return;
+  order.splice(idx, 1);
+  order.splice(newIdx, 0, id);
+  state.sectionOrder = order;
+  saveState();
+  applySectionOrder();
+  toast('Seção movida');
+}
+
+function moveSectionToEnd(id, where) {
+  const order = state.sectionOrder.filter(x => x !== id);
+  if (where === 'top') order.unshift(id);
+  else order.push(id);
+  state.sectionOrder = order;
+  saveState();
+  applySectionOrder();
+  toast('Seção movida');
+}
+
+// ========================================================================
 // RENDER ALL
 // ========================================================================
 function renderAll() {
+  applySectionOrder();
   renderMonthTabs();
   renderHero();
   renderCalendar();
@@ -2275,6 +2681,7 @@ function renderAll() {
   renderBillCategory('dividas');
   renderBillCategory('extras');
   renderBillCategory('poupanca');
+  renderSubs();
   renderGoals();
 }
 
@@ -2298,6 +2705,8 @@ loadState();
 })();
 
 renderAll();
+setupSectionDragAndDrop();
+setupTouchReorderFallback();
 </script>
 </body>
 </html>
